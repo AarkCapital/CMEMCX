@@ -1,13 +1,9 @@
+// Set a default USD/INR rate (you can change this manually)
+let usdInrRate = 86.10; // Hardcoded default value, update as needed
+
 async function fetchLatestPrices() {
     try {
         document.getElementById('result').innerText = 'Fetching prices...';
-
-        // Fetch USD/INR exchange rate (USDINR=X) via Yahoo Finance
-        const exchangeResponse = await fetch('https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v8/finance/chart/USDINR=X');
-        if (!exchangeResponse.ok) throw new Error(`Exchange API failed: ${exchangeResponse.status}`);
-        const exchangeData = await exchangeResponse.json();
-        console.log('Exchange Data:', exchangeData);
-        const usdInrRate = exchangeData.chart?.result?.[0]?.meta?.regularMarketPrice ?? throw new Error('USD/INR rate not found');
 
         // Fetch Crude Oil futures price (CL=F) via Yahoo Finance
         const oilResponse = await fetch('https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v8/finance/chart/CL=F');
@@ -23,7 +19,7 @@ async function fetchLatestPrices() {
         console.log('Gas Data:', gasData);
         const gasPrice = gasData.chart?.result?.[0]?.meta?.regularMarketPrice ?? throw new Error('Gas price not found');
 
-        // Calculate results
+        // Calculate results using the manual USD/INR rate
         const oilResult = usdInrRate * oilPrice;
         const gasResult = usdInrRate * gasPrice;
 
@@ -37,8 +33,22 @@ async function fetchLatestPrices() {
     }
 }
 
+// Optional: Function to update USD/INR rate from an HTML input
+function updateExchangeRate() {
+    const inputRate = document.getElementById('usdInrInput')?.value;
+    if (inputRate && !isNaN(inputRate) && inputRate > 0) {
+        usdInrRate = parseFloat(inputRate);
+        fetchLatestPrices(); // Refresh prices with new rate
+    } else {
+        console.error('Invalid USD/INR rate entered');
+    }
+}
+
 // Fetch initially
 fetchLatestPrices();
 
 // Auto-update every 60 seconds
 setInterval(fetchLatestPrices, 60000);
+
+// Optional: Add event listener for manual rate updates (if using an input field)
+document.getElementById('usdInrInput')?.addEventListener('change', updateExchangeRate);
